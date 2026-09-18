@@ -1,0 +1,33 @@
+{
+  "id": "rose-pine-dawn",
+  "name": "Rosé Pine Dawn",
+  "family": "rose-pine",
+  "mode": "light",
+  "source": "https://rosepinetheme.com/palette",
+  "colors": {
+    "bg": "#faf4ed",
+    "surface": "#f2e9e1",
+    "text": "#464261",
+    "heading": "#464261",
+    "muted": "#9893a5",
+    "border": "#cecacd",
+    "accent": "#286983",
+    "accentAlt": "#907aa9",
+    "codeBg": "#f4ede8",
+    "codeText": "#464261",
+    "syntax": {
+      "string": "#ea9d34",
+      "comment": "#9893a5",
+      "constant": "#b4637a",
+      "keyword": "#286983",
+      "parameter": "#907aa9",
+      "function": "#d7827e",
+      "stringExpression": "#56949f",
+      "punctuation": "#797593",
+      "link": "#907aa9",
+      "inserted": "#56949f",
+      "deleted": "#b4637a",
+      "changed": "#ea9d34"
+    }
+  }
+}

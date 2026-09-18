@@ -57,6 +57,11 @@ echo "hello" | wc -l
 
 ## 其它
 
+缩进式代码块（4 空格，没有围栏 —— 也必须走同一条代码块管线）：
+
+    indented code line 1
+    indented code line 2
+
 ---
 
 图片：![占位图](https://example.invalid/img.png)

@@ -1,0 +1,33 @@
+{
+  "id": "fixture-base",
+  "name": "Fixture Base",
+  "family": "fixture",
+  "mode": "dark",
+  "source": "https://example.invalid/fixture-base",
+  "colors": {
+    "bg": "#0b0b0f",
+    "surface": "#14141a",
+    "text": "#e4e4ea",
+    "heading": "#ffffff",
+    "muted": "#8a8a99",
+    "border": "#26262f",
+    "accent": "#7aa2f7",
+    "accentAlt": "#bb9af7",
+    "codeBg": "#101018",
+    "codeText": "#dcdce4",
+    "syntax": {
+      "string": "#9ece6a",
+      "comment": "#5c6370",
+      "constant": "#ff9e64",
+      "keyword": "#bb9af7",
+      "parameter": "#e0af68",
+      "function": "#7aa2f7",
+      "stringExpression": "#9ece6a",
+      "punctuation": "#9aa5ce",
+      "link": "#73daca",
+      "inserted": "#9ece6a",
+      "deleted": "#f7768e",
+      "changed": "#e0af68"
+    }
+  }
+}

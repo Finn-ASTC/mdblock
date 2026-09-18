@@ -1,0 +1,33 @@
+{
+  "id": "fixture-valid",
+  "name": "Fixture Valid",
+  "family": "fixture",
+  "mode": "light",
+  "source": "https://example.invalid/fixture-valid",
+  "colors": {
+    "bg": "#ffffff",
+    "surface": "#f4f4f6",
+    "text": "#1b1b1f",
+    "heading": "#000000",
+    "muted": "#767680",
+    "border": "#d8d8de",
+    "accent": "#0055ff",
+    "accentAlt": "#aa00ff",
+    "codeBg": "#f0f0f4",
+    "codeText": "#222228",
+    "syntax": {
+      "string": "#008000",
+      "comment": "#808080",
+      "constant": "#b00020",
+      "keyword": "#0000ff",
+      "parameter": "#a0522d",
+      "function": "#795548",
+      "stringExpression": "#008000",
+      "punctuation": "#555555",
+      "link": "#0066cc",
+      "inserted": "#2e7d32",
+      "deleted": "#c62828",
+      "changed": "#ef6c00"
+    }
+  }
+}

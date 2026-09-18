@@ -1,0 +1,7 @@
+{
+  "name": "Fixture Extends No Id",
+  "extends": "./base.json",
+  "colors": {
+    "accent": "#00ff00"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "id": "catppuccin-latte",
+  "name": "Catppuccin Latte",
+  "family": "catppuccin",
+  "mode": "light",
+  "source": "https://github.com/catppuccin/palette",
+  "colors": {
+    "bg": "#eff1f5",
+    "surface": "#ccd0da",
+    "text": "#5c5f77",
+    "heading": "#4c4f69",
+    "muted": "#8c8fa1",
+    "border": "#bcc0cc",
+    "accent": "#1e66f5",
+    "accentAlt": "#8839ef",
+    "codeBg": "#e6e9ef",
+    "codeText": "#4c4f69",
+    "syntax": {
+      "string": "#40a02b",
+      "comment": "#8c8fa1",
+      "constant": "#fe640b",
+      "keyword": "#8839ef",
+      "parameter": "#df8e1d",
+      "function": "#1e66f5",
+      "stringExpression": "#179299",
+      "punctuation": "#6c6f85",
+      "link": "#04a5e5",
+      "inserted": "#40a02b",
+      "deleted": "#d20f39",
+      "changed": "#df8e1d"
+    }
+  }
+}

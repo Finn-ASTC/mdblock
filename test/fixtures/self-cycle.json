@@ -1,0 +1,7 @@
+{
+  "name": "Fixture Self Cycle",
+  "extends": "./self-cycle.json",
+  "colors": {
+    "accent": "#ff0000"
+  }
+}

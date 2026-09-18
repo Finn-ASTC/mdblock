@@ -1,0 +1,33 @@
+{
+  "id": "dracula",
+  "name": "Dracula",
+  "family": "dracula",
+  "mode": "dark",
+  "source": "https://draculatheme.com/contribute",
+  "colors": {
+    "bg": "#282a36",
+    "surface": "#44475a",
+    "text": "#f8f8f2",
+    "heading": "#f8f8f2",
+    "muted": "#6272a4",
+    "border": "#44475a",
+    "accent": "#ff79c6",
+    "accentAlt": "#bd93f9",
+    "codeBg": "#44475a",
+    "codeText": "#f8f8f2",
+    "syntax": {
+      "string": "#f1fa8c",
+      "comment": "#6272a4",
+      "constant": "#bd93f9",
+      "keyword": "#ff79c6",
+      "parameter": "#ffb86c",
+      "function": "#50fa7b",
+      "stringExpression": "#8be9fd",
+      "punctuation": "#f8f8f2",
+      "link": "#8be9fd",
+      "inserted": "#50fa7b",
+      "deleted": "#ff5555",
+      "changed": "#ffb86c"
+    }
+  }
+}

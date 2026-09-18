@@ -129,11 +129,22 @@ const fragments = {
 };
 
 for (const [name, html] of Object.entries(fragments)) {
-  check(`N2-${name}`, `HTML 无字面色值（${name}）`, () => {
-    const hits = html.match(new RegExp(COLOR_LITERAL, "g"));
-    assert(hits === null, `出现字面色值：${(hits ?? []).slice(0, 5).join(", ")}`);
+  check(`N2-${name}`, `markup 无字面色值（${name}）`, () => {
+    // N2 判的是 markup：`--css inline` 的 `<style>` 块职责正是定义这些颜色，必须剥掉再扫。
+    const markup = html.replace(/<style>[\s\S]*?<\/style>/g, "");
+    const hits = markup.match(new RegExp(COLOR_LITERAL, "g"));
+    assert(hits === null, `markup 出现字面色值：${(hits ?? []).slice(0, 5).join(", ")}`);
   });
 }
+
+check("N2-0", "inline 样式表本身确实定义了颜色（上一条不是因为空文件而通过）", () => {
+  const styleBlocks = fragments.latte.match(/<style>[\s\S]*?<\/style>/g) ?? [];
+  assert(styleBlocks.length === 1, `inline 产物应有 1 个 <style>，实际 ${styleBlocks.length}`);
+  assert(
+    new RegExp(COLOR_LITERAL).test(styleBlocks[0] ?? ""),
+    "内联样式表里没有任何字面色值 —— 主题色没被写进去，说明契约变量是空的",
+  );
+});
 
 check("B-1", "根元素形如 <div class=\"mdblock\" data-theme=\"…\">", () => {
   assert(
@@ -155,6 +166,17 @@ check("B-2", "代码高亮引用 var(--shiki-token-keyword)", () => {
 
 check("B-3", "inline 模式自包含（含 <style>）", () => {
   assert(fragments.latte.includes("<style>"), "inline 模式产物里没有 <style>");
+});
+
+check("B-5", "所有 <pre> 都是 .mdblock-code（含缩进式代码块）", () => {
+  const total = fragments.latte.match(/<pre\b/g) ?? [];
+  const tagged = fragments.latte.match(/<pre class="mdblock-code">/g) ?? [];
+  assert(
+    total.length === tagged.length,
+    `共 ${total.length} 个 <pre>，只有 ${tagged.length} 个带 mdblock-code —— ` +
+      "有代码块绕过了渲染管线（缩进式代码块最容易漏）",
+  );
+  assert(total.length >= 4, `示例文档应产出多个代码块，实际只有 ${total.length}`);
 });
 
 check("B-4", "hardIsolation 打开时根规则含 all: revert", () => {
@@ -279,9 +301,47 @@ const PROBE = `
       preFontFamily: gpre ? gpre.fontFamily.slice(0, 30) : null,
       thTextAlign: gth ? gth.textAlign : null,
       thBorderStyle: gth ? gth.borderStyle : null,
-      liListStyle: gli ? gli.listStyleType : null
+      liListStyle: gli ? gli.listStyleType : null,
+      wordSpacing: g.wordSpacing,
+      boxSizing: g.boxSizing,
+      preFontSize: gpre ? gpre.fontSize : null,
+      strongFontWeight: (function () {
+        var s = root.querySelector("strong");
+        return s ? getComputedStyle(s).fontWeight : null;
+      })()
     };
   });
+
+  var A = report.A || {};
+  var B = report.B || {};
+  var checks = [];
+  var expect = function (id, label, actual, want) {
+    checks.push({ id: id, label: label, ok: String(actual) === String(want), actual: actual, want: want });
+  };
+  expect("L1-1", "根元素未继承宿主 letter-spacing", A.letterSpacing, "normal");
+  expect("L1-2", "根元素未继承宿主 text-transform", A.textTransform, "none");
+  expect("L1-3", "根元素未继承宿主 word-spacing", A.wordSpacing === "normal" || A.wordSpacing === "0px", true);
+  expect("L1-4", "段落 margin 未被宿主 *{margin:0} 抹掉", A.pMarginTop !== "0px", true);
+  expect("L1-5", "box-sizing 是我们的 border-box", A.boxSizing, "border-box");
+  expect("L1-6", "th 边框是我们的 solid 而非宿主 dotted", A.thBorderStyle, "solid");
+  expect("L1-7", "th 对齐是我们的 left 而非宿主 right", A.thTextAlign, "left");
+  expect("L1-8", "代码块字体不是宿主的 cursive", String(A.preFontFamily).indexOf("cursive") === -1, true);
+  expect("L1-9", "列表符号没被宿主 list-style:none 抹掉", A.liListStyle !== "none", true);
+  expect("L1-10", "strong 字重不是宿主的 400", A.strongFontWeight !== "400", true);
+  expect("L1-12", "代码块字号未被宿主 pre{font-size} 覆盖", parseFloat(A.preFontSize) > 12, true);
+  expect("COEXIST-1", "同页两块主题不同（背景色不同）", A.background !== B.background, true);
+  var C = report.C || {};
+  expect("ISO-1", "hard-isolation 块的背景是主题色而非透明", C.background !== "rgba(0, 0, 0, 0)", true);
+  expect("ISO-2", "hard-isolation 块的文字色不是宿主色", C.color !== "rgb(187, 0, 0)", true);
+  expect("ISO-3", "hard-isolation 块未继承宿主字距", C.letterSpacing, "normal");
+  expect("ISO-4", "hard-isolation 块未继承宿主大写", C.textTransform, "none");
+  expect("ISO-5", "hard-isolation 块的字体不是宿主的花体", String(C.fontFamily).indexOf("cursive") === -1, true);
+  var codeNodes = document.querySelectorAll('section[data-probe="A"] .mdblock pre code');
+  var codeColors = Array.prototype.map.call(codeNodes, function (n) {
+    return getComputedStyle(n).color;
+  });
+  var uniforms = codeColors.length > 0 && codeColors.every(function (c) { return c === codeColors[0]; });
+  expect("L1-11", "所有代码块内层 code 字色一致（缩进块 vs 围栏块）", uniforms ? "same" : codeColors.join(" | "), "same");
   Object.keys(report).forEach(function (k) {
     lines.push("块 " + k + "  data-theme=" + (report[k] ? report[k].dataTheme : "?") +
       "\\n  bg=" + (report[k] ? report[k].background : "-") +
@@ -297,6 +357,16 @@ const PROBE = `
       "  li.list-style=" + (report[k] ? report[k].liListStyle : "-"));
   });
   window.__mdblockProbe = report;
+  window.__mdblockChecks = checks;
+  lines.push("");
+  lines.push("=== 验收检查（L1 普通宿主层）===");
+  var failed = 0;
+  checks.forEach(function (c) {
+    if (!c.ok) failed++;
+    lines.push((c.ok ? "PASS  " : "FAIL  ") + c.id + "  " + c.label +
+      "   [实际=" + c.actual + "  期望=" + c.want + "]");
+  });
+  lines.push(failed === 0 ? ">>> L1 层全部通过" : (">>> " + failed + " 项失败"));
   var out = document.getElementById("probe-output");
   if (out) out.textContent = lines.join("\\n\\n");
 })();
@@ -305,18 +375,23 @@ const PROBE = `
 
 const template = readFileSync(join(ROOT, "test/hostile-host.html"), "utf8");
 const page = template
-  .replace("<!--MD-BLOCK-A-->", `<section data-probe="A">\n${fragments.latte}\n</section>`)
-  .replace("<!--MD-BLOCK-B-->", `<section data-probe="B">\n${fragments.mocha}\n</section>`)
-  .replace("<!--MD-BLOCK-C-->", `<section data-probe="C">\n${fragments.nord}\n</section>`)
+  .replace(
+    "<!--BLOCKS-L1-->",
+    `<section data-probe="A">\n${fragments.latte}\n</section>\n` +
+      `<section data-probe="B">\n${fragments.mocha}\n</section>\n` +
+      `<section data-probe="C">\n${fragments.nord}\n</section>`,
+  )
+  .replace("<!--BLOCK-L2-->", fragments.nord)
   .replace("</body>", `${PROBE}\n</body>`);
 writeFileSync(join(DIST, "hostile.html"), page);
 
-check("H-1", "三个文章块都已注入宿主页", () => {
+check("H-1", "三个文章块已注入 L1 层、一个注入 L2 层", () => {
   const html = readFileSync(join(DIST, "hostile.html"), "utf8");
   for (const theme of ["catppuccin-latte", "catppuccin-mocha", "nord"]) {
     assert(html.includes(`data-theme="${theme}"`), `宿主页里没找到 ${theme} 的块`);
   }
-  assert(!html.includes("<!--MD-BLOCK"), "还有未替换的占位符");
+  assert(!html.includes("<!--BLOCK"), "还有未替换的占位符");
+  assert(html.includes("limit-demo"), "缺少 L2 已知限制演示区");
 });
 
 // ── 汇总 ──────────────────────────────────────────────────────────────────
