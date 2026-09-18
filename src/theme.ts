@@ -8,6 +8,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { SYNTAX_KEYS } from "./syntax-map.ts";
 import type { SyntaxTokens, Theme, ThemeColors, ThemeMode } from "./types.ts";
@@ -20,8 +21,12 @@ export class ThemeError extends Error {
   }
 }
 
-/** 内置主题所在目录，相对 cwd。 */
-const DEFAULT_SEARCH_DIR = "themes";
+/**
+ * 内置主题目录：`<包根>/themes`，由本模块自身的位置推出，**与 cwd 无关**。
+ * 见 `docs/orch/CONTRACT.md` 修订 A-3 —— 早先按 cwd 解析，导致 CLI 离开仓库根
+ * 就找不到内置主题。
+ */
+const BUILTIN_THEMES_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "themes");
 
 /** `id` / `family` 的格式（`themes/_schema.json`）。 */
 const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -380,12 +385,15 @@ function loadThemeByRef(ref: string, ctx: ResolveContext): Theme {
  *
  * 读文件 → `validateTheme` 级别的结构校验 → 递归解析 `extends` 链 → 返回补齐后的
  * `Theme`。任何失败都抛 `ThemeError`。
+ *
+ * 内置 id 在 `<包根>/themes/` 下查找（**与 cwd 无关**，所以装到哪都能用）；
+ * `opts.searchDir` 可以覆盖它，此时按 cwd 解析。相对路径形式的 `ref` 始终按 cwd 解析。
  */
 export function loadTheme(ref: string, opts?: { searchDir?: string }): Theme {
   if (!isNonEmptyString(ref)) {
     throw new ThemeError(`loadTheme: ref 必须是非空字符串，收到 ${describeValue(ref)}`);
   }
-  const searchDir = resolve(opts?.searchDir ?? DEFAULT_SEARCH_DIR);
+  const searchDir = resolve(opts?.searchDir ?? BUILTIN_THEMES_DIR);
   const file = resolveThemePath(ref, { baseDir: process.cwd(), searchDir, stack: [] });
   const data = readThemeJson(file);
   return resolveTheme(data, {
@@ -406,7 +414,7 @@ export function loadTheme(ref: string, opts?: { searchDir?: string }): Theme {
 export function validateTheme(data: unknown, opts?: { baseDir?: string }): Theme {
   return resolveTheme(data, {
     baseDir: resolve(opts?.baseDir ?? process.cwd()),
-    searchDir: resolve(DEFAULT_SEARCH_DIR),
+    searchDir: resolve(BUILTIN_THEMES_DIR),
     stack: [],
   });
 }

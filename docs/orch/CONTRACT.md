@@ -277,3 +277,29 @@ bunx tsc --noEmit # 类型必须干净（你自己的 worktree 里）
 仍然会穿透 —— `all: revert` 只作用于根元素自身，挡不住后代上的 `!important`。这是 v1
 的已知限制，写进 README 即可，不要用 `!important` 去对轰（N3）。
 **影响面**：仅 `src/css.ts`（M3 第 3 轮）。
+
+### A-3 · 内置主题按包内目录解析，不再按 cwd
+
+**谁改的**：控制方（交付后复查，2026-09-18）。
+**为什么**：Wave 0 冻结的是 `opts.searchDir ?? "themes"`，`resolve()` 按 cwd 展开 ——
+结果是这个 CLI 只有站在仓库根才能用：
+
+```
+$ cd /tmp && bun /…/mdblock/src/cli.ts post.md --theme nord
+mdblock: 找不到主题 "nord"（已查找：themes/nord.json, nord.json）   退出码 1
+```
+
+对一个「嵌进别人项目」的工具，这是致命的：内置主题是核心卖点之一。
+**修法**：内置目录由 `src/theme.ts` 自身位置推出（`import.meta.url` → `<包根>/themes`），
+与 cwd 无关。`opts.searchDir` 仍然覆盖它（此时按 cwd 解析）；相对路径形式的 `ref`
+仍然按 cwd 解析（用户显式给路径就该按他的 cwd 找）。
+**代价**：错误消息里会出现绝对路径（当包不在 cwd 下时）。相对路径语义未变。
+
+### A-4 · 批量模式拒绝同名输出，而不是静默覆盖
+
+**谁改的**：控制方（同一轮复查）。
+**为什么**：`p1/post.md p2/post.md -d out` 两个输入都映射到 `out/post.html`，
+**后者静默覆盖前者、退出码 0、无任何提示** —— 是数据丢失级的脚枪。
+**修法**：`parseArgs` 在校验阶段检测输出名冲突并抛 `UsageError`（退出码 2，列名冲突的两个输入）。
+**代价**：同名输入必须改名或拆调用。原先「同名就应该是同一个文件」的用法不复存在 ——
+那种用法本来就不可靠。

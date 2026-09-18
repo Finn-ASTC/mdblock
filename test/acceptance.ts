@@ -257,6 +257,28 @@ for (const [label, args, expected] of errorRuns) {
   });
 }
 
+check("X-5", "批量同名 basename 报用法错误而不是静默覆盖", () => {
+  const run = cli(["examples/post.md", "examples/post.md", "-d", "dist/collide"]);
+  assert(run.code === 2, `实际退出码 ${run.code}，期望 2`);
+  assert(/同一个文件/.test(run.stderr), `失败原因不对：${run.stderr.slice(0, 200)}`);
+  assert(!existsSync(join(DIST, "collide")), "报错时不应该留下输出目录");
+});
+
+check("X-6", "内置主题在任意 cwd 下可用（不再依赖仓库根）", () => {
+  const proc = spawnSync("bun", [join(ROOT, "src/cli.ts"), join(ROOT, "examples/post.md"),
+    "--theme", "nord", "-o", join(DIST, "cwd-free.html")], { cwd: DIST, encoding: "utf8" });
+  assert(proc.status === 0, `从 ${DIST} 运行时退出码 ${proc.status}；stderr: ${(proc.stderr ?? "").slice(0, 200)}`);
+  const html = readFileSync(join(DIST, "cwd-free.html"), "utf8");
+  assert(html.includes('data-theme="nord"'), "产物里没有 nord 主题");
+  assert(html.includes("--mdblock-bg: #2e3440"), "nord 的背景色没写进产物");
+});
+
+check("X-7", "未知主题名给出明确的 ThemeError 而不是崩溃", () => {
+  const run = cli(["examples/post.md", "--theme", "no-such-theme", "-o", "dist/x.html"]);
+  assert(run.code === 1, `实际退出码 ${run.code}，期望 1`);
+  assert(/找不到主题/.test(run.stderr), `错误信息不对：${run.stderr.slice(0, 200)}`);
+});
+
 // ── 4. 组装敌意宿主页 ──────────────────────────────────────────────────────
 
 console.log("\n[5] 组装敌意宿主页");

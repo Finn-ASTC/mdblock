@@ -194,6 +194,12 @@ describe("parseArgs：错误路径", () => {
     expectUsageError(() => parseArgs(["a.md", "b.md", "-o", "x.html"]), /-d\/--outdir/);
   });
 
+  test("批量模式下同名 basename 报用法错误，而不是静默互相覆盖", () => {
+    expectUsageError(() => parseArgs(["a/post.md", "b/post.md", "-d", "out"]), /同一个文件/);
+    expectUsageError(() => parseArgs(["x.md", "y.md", "x.md", "-d", "out"]), /同一个文件/);
+    expectUsageError(() => parseArgs(["d1/n.md", "d2/n.markdown", "-d", "out"]), /同一个文件/);
+  });
+
   test("--line-height 不是数字", () => {
     expectUsageError(() => parseArgs(["post.md", "--line-height", "abc"]), /需要一个数字/);
     expectUsageError(() => parseArgs(["post.md", "--line-height", ""]), /需要一个数字/);

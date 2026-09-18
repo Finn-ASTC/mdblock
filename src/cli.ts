@@ -226,6 +226,20 @@ export function parseArgs(argv: string[]): ParsedArgs {
   if (parsed.inputs.length > 1 && parsed.outdir === undefined) {
     throw new UsageError("多个输入文件需要 -d/--outdir 指定输出目录");
   }
+  if (parsed.outdir !== undefined) {
+    const seen = new Map<string, string>();
+    for (const input of parsed.inputs) {
+      const name = htmlNameFor(input);
+      const first = seen.get(name);
+      if (first !== undefined) {
+        throw new UsageError(
+          `批量模式下 ${first} 与 ${input} 会写出同一个文件 ${name}（后者覆盖前者）；` +
+            "请改名、分目录跑，或拆成两次调用",
+        );
+      }
+      seen.set(name, input);
+    }
+  }
   return parsed;
 }
 

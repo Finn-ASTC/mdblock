@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
@@ -320,5 +320,51 @@ describe("校验拒绝的场景", () => {
   test("错误消息里带上出错的文件路径", () => {
     const error = expectThemeError(() => loadTheme(fixture("bad-mode.json")));
     expect(error.message).toContain("bad-mode.json");
+  });
+});
+
+describe("内置主题目录与 cwd 无关", () => {
+  /** 在临时目录里跑 `body`，结束后恢复 cwd 并清理。 */
+  function inElsewhere(body: (dir: string) => void): void {
+    const before = process.cwd();
+    const dir = mkdtempSync(join(tmpdir(), "mdblock-cwd-"));
+    try {
+      process.chdir(dir);
+      body(dir);
+    } finally {
+      process.chdir(before);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  test("在仓库外的 cwd 也能按 id 加载内置主题", () => {
+    inElsewhere(() => {
+      const theme = loadTheme("nord");
+      expect(theme.id).toBe("nord");
+      expect(theme.colors.bg).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(Object.keys(theme.colors.syntax).length).toBeGreaterThan(0);
+    });
+  });
+
+  test("在仓库外的 cwd，自定义主题 extends 内置 id 同样解析得到", () => {
+    inElsewhere((dir) => {
+      const file = join(dir, "child-of-nord.json");
+      writeFileSync(
+        file,
+        JSON.stringify({ name: "Child Of Nord", extends: "nord", colors: { accent: "#ff0000" } }),
+      );
+
+      const theme = loadTheme("./child-of-nord.json");
+      expect(theme.colors.accent).toBe("#ff0000");
+      expect(theme.colors.bg).toBe(loadTheme("nord").colors.bg);
+    });
+  });
+
+  test("显式 searchDir 仍然是 cwd 相对，且覆盖内置目录", () => {
+    inElsewhere(() => {
+      writeFileSync("local-theme.json", JSON.stringify({ name: "Local", colors: BASE.colors }));
+      const theme = loadTheme("local-theme", { searchDir: "." });
+      expect(theme.name).toBe("Local");
+    });
   });
 });
