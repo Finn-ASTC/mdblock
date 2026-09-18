@@ -1,0 +1,9 @@
+{
+  "id": "fixture-extends-mid",
+  "name": "Fixture Extends Mid",
+  "extends": "./base.json",
+  "colors": {
+    "accent": "#00aa88",
+    "bg": "#010203"
+  }
+}

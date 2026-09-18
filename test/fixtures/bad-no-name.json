@@ -1,0 +1,30 @@
+{
+  "id": "fixture-no-name",
+  "family": "fixture",
+  "colors": {
+    "bg": "#000000",
+    "surface": "#111111",
+    "text": "#eeeeee",
+    "heading": "#ffffff",
+    "muted": "#888888",
+    "border": "#222222",
+    "accent": "#7aa2f7",
+    "accentAlt": "#bb9af7",
+    "codeBg": "#101010",
+    "codeText": "#dddddd",
+    "syntax": {
+      "string": "#9ece6a",
+      "comment": "#5c6370",
+      "constant": "#ff9e64",
+      "keyword": "#bb9af7",
+      "parameter": "#e0af68",
+      "function": "#7aa2f7",
+      "stringExpression": "#9ece6a",
+      "punctuation": "#9aa5ce",
+      "link": "#73daca",
+      "inserted": "#9ece6a",
+      "deleted": "#f7768e",
+      "changed": "#e0af68"
+    }
+  }
+}

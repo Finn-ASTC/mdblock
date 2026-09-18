@@ -1,0 +1,32 @@
+{
+  "id": "fixture-found",
+  "name": "Fixture Found",
+  "family": "fixture",
+  "mode": "light",
+  "colors": {
+    "bg": "#fdfdfd",
+    "surface": "#f2f2f2",
+    "text": "#101010",
+    "heading": "#000000",
+    "muted": "#6f6f6f",
+    "border": "#e0e0e0",
+    "accent": "#dd0000",
+    "accentAlt": "#990099",
+    "codeBg": "#eeeeee",
+    "codeText": "#202020",
+    "syntax": {
+      "string": "#0a7d00",
+      "comment": "#7a7a7a",
+      "constant": "#a01030",
+      "keyword": "#0000cc",
+      "parameter": "#8b4513",
+      "function": "#6d4c41",
+      "stringExpression": "#0a7d00",
+      "punctuation": "#4a4a4a",
+      "link": "#005fbf",
+      "inserted": "#2e7d32",
+      "deleted": "#c62828",
+      "changed": "#ef6c00"
+    }
+  }
+}

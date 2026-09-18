@@ -1,0 +1,4 @@
+{
+  "name": "Fixture Bare Extends",
+  "extends": "./base.json"
+}

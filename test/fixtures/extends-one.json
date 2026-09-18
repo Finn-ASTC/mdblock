@@ -1,0 +1,11 @@
+{
+  "id": "fixture-extends-one",
+  "name": "Fixture Extends One",
+  "extends": "./base.json",
+  "colors": {
+    "accent": "#ff0000",
+    "syntax": {
+      "keyword": "#123456"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Fixture By Id",
+  "extends": "fixture-found",
+  "colors": {
+    "accent": "#abcdef"
+  }
+}
