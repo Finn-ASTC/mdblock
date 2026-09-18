@@ -45,6 +45,10 @@ function resolveShadow(shadow: Options["shadow"]): string {
   return shadow;
 }
 
+/** Monospace stack shared by inline code, fenced code and kbd. */
+const MONO_FONT_STACK =
+  'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
+
 /** Generate the full stylesheet for one theme/options pair. */
 export function renderCss(theme: Theme, options: Options): string {
   const colors = theme.colors;
@@ -152,12 +156,27 @@ ${highlightVars}
 .mdblock h6 { font-size: 0.9em; letter-spacing: 0.02em; }
 
 /* ── lists (including nesting and task lists) ──────────────────────── */
-.mdblock ul, .mdblock ol { margin: 0.9em 0; padding-left: 1.6em; }
+.mdblock ul, .mdblock ol {
+  margin: 0.9em 0;
+  padding-left: 1.6em;
+  list-style-position: outside;
+}
+.mdblock ul {
+  list-style-type: disc;
+}
+.mdblock ol {
+  list-style-type: decimal;
+}
 .mdblock li { margin: 0.3em 0; }
 .mdblock li > ul, .mdblock li > ol { margin: 0.3em 0; }
 .mdblock li::marker { color: var(--mdblock-accent); }
-.mdblock ul.contains-task-list { padding-left: 0.2em; list-style: none; }
-.mdblock .task-list-item { list-style: none; }
+.mdblock ul.contains-task-list {
+  padding-left: 0.2em;
+  list-style: none;
+}
+.mdblock .task-list-item {
+  list-style: none;
+}
 .mdblock .task-list-item-checkbox {
   margin: 0 0.5em 0 0;
   vertical-align: middle;
@@ -208,7 +227,7 @@ ${highlightVars}
 /* ── code (inline + fenced) ────────────────────────────────────────── */
 .mdblock code {
   padding: 0.15em 0.4em;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-family: ${MONO_FONT_STACK};
   font-size: 0.9em;
   color: var(--mdblock-accent);
   background: color-mix(in oklab, var(--mdblock-surface) 75%, transparent);
@@ -219,6 +238,8 @@ ${highlightVars}
   padding: 1em 1.25em;
   overflow-x: auto;
   white-space: pre;
+  font-family: ${MONO_FONT_STACK};
+  font-size: 1em;
   color: var(--mdblock-code-text);
   background: var(--mdblock-code-bg);
   border: 1px solid color-mix(in oklab, var(--mdblock-border-color) 60%, transparent);
@@ -253,7 +274,7 @@ ${highlightVars}
 }
 .mdblock kbd {
   padding: 0.15em 0.45em;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-family: ${MONO_FONT_STACK};
   font-size: 0.85em;
   color: var(--mdblock-text);
   background: var(--mdblock-surface);

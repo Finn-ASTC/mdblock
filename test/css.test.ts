@@ -177,6 +177,23 @@ function rootBody(css: string): string {
   return ruleBody(css, ".mdblock");
 }
 
+/** Minimal [ids, classes, elements] specificity for the simple selectors used here. */
+function specificity(selector: string): [number, number, number] {
+  const ids = (selector.match(/#[A-Za-z0-9_-]+/g) ?? []).length;
+  const classes = (selector.match(/\.[A-Za-z0-9_-]+/g) ?? []).length;
+  const elements = (selector.match(/(^|[\s>+~])[A-Za-z][A-Za-z0-9-]*/g) ?? []).length;
+  return [ids, classes, elements];
+}
+
+/** True when `a` wins the cascade over `b` on its own. */
+function isMoreSpecific(a: string, b: string): boolean {
+  const [aid, aclass, ael] = specificity(a);
+  const [bid, bclass, bel] = specificity(b);
+  if (aid !== bid) return aid > bid;
+  if (aclass !== bclass) return aclass > bclass;
+  return ael > bel;
+}
+
 /** Selector text of every rule, comments stripped. */
 function selectors(css: string): string[] {
   return css
@@ -274,6 +291,48 @@ describe("renderCss", () => {
       ".mdblock pre, .mdblock .mdblock-code",
     );
     expect(pre).toContain("white-space: pre;");
+  });
+
+  test("the fenced code block sets its own monospace font-family and font-size", () => {
+    const css = renderCss(THEME_A, OPTIONS);
+    const pre = ruleBody(css, ".mdblock pre, .mdblock .mdblock-code");
+    for (const property of ["font-family", "font-size"]) {
+      expect(pre).toContain(`${property}:`);
+    }
+
+    const familyOf = (selector: string): string => {
+      const match = ruleBody(css, selector).match(/font-family: (.*);/);
+      if (!match || !match[1]) throw new Error(`no font-family in ${selector}`);
+      return match[1];
+    };
+    expect(familyOf(".mdblock pre, .mdblock .mdblock-code")).toBe(
+      familyOf(".mdblock code"),
+    );
+  });
+
+  test("declares list markers explicitly", () => {
+    const css = renderCss(THEME_A, OPTIONS);
+    const expectations: ReadonlyArray<readonly [string, string]> = [
+      [".mdblock ul", "list-style-type: disc;"],
+      [".mdblock ol", "list-style-type: decimal;"],
+      [".mdblock ul, .mdblock ol", "list-style-position: outside;"],
+    ];
+    for (const [selector, declaration] of expectations) {
+      expect(ruleBody(css, selector)).toContain(declaration);
+    }
+  });
+
+  test("task-list items stay bullet-free (reverse case)", () => {
+    const css = renderCss(THEME_A, OPTIONS);
+    for (const selector of [
+      ".mdblock ul.contains-task-list",
+      ".mdblock .task-list-item",
+    ]) {
+      const body = ruleBody(css, selector);
+      expect(body).toContain("list-style: none;");
+      expect(isMoreSpecific(selector, ".mdblock ul")).toBe(true);
+      expect(isMoreSpecific(selector, ".mdblock ol")).toBe(true);
+    }
   });
 
   test("maps border and shadow none values", () => {
