@@ -6,9 +6,11 @@
  *       no global root selector, so multiple article blocks can coexist.
  *   N3  no `!important`; host piercing is left to `--hard-isolation`.
  *
- * The `--mdblock-*` / `--shiki-*` custom properties are public API: users
- * override them by hand, so they are defined exactly once, on `.mdblock`.
- * In-between colours (hover, zebra stripes, hairlines) are derived with
+ * The `--mdblock-*` / `--shiki-*` custom properties are public API: they are
+ * defined exactly once, on `.mdblock[data-theme="<theme.id>"]`, so several
+ * differently-themed blocks can share one page. Users override them by hand
+ * with the same selector (or a higher-specificity one). In-between colours
+ * (hover, zebra stripes, hairlines) are derived with
  * `color-mix(in oklab, ...)` instead of adding tokens to the theme.
  */
 
@@ -57,13 +59,15 @@ export function renderCss(theme: Theme, options: Options): string {
 
   return `/*
  * mdblock — generated stylesheet
- * Every rule is scoped under \`.mdblock\`. All custom properties below are
- * public API and may be overridden by hand on the same selector.
+ * Every rule is scoped under \`.mdblock\`. The theme custom properties below
+ * are defined once, on \`.mdblock[data-theme="<theme.id>"]\`, so several
+ * differently-themed blocks can share one page. Override them with the same
+ * selector or a higher-specificity one.
  */
 
-/* ── shell: frame + public custom properties ───────────────────────── */
+/* ── shell: frame (theme-independent) ──────────────────────────────── */
 .mdblock {
-${isolation}  box-sizing: border-box;
+  box-sizing: border-box;
   max-width: var(--mdblock-width);
   margin: 0 auto;
   padding: var(--mdblock-padding);
@@ -76,8 +80,11 @@ ${isolation}  box-sizing: border-box;
   border-radius: var(--mdblock-radius);
   box-shadow: var(--mdblock-shadow);
   overflow-wrap: break-word;
+}
 
-  /* face */
+/* ── theme custom properties (scoped by data-theme) ────────────────── */
+.mdblock[data-theme="${theme.id}"] {
+${isolation}  /* face */
   --mdblock-bg: ${bg};
   --mdblock-surface: ${colors.surface};
   --mdblock-text: ${colors.text};

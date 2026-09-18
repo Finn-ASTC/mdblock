@@ -141,14 +141,27 @@ function withOptions(overrides: Partial<Options>): Options {
   return { ...OPTIONS, ...overrides };
 }
 
-/** Body of the first `.mdblock { ... }` rule (declarations only). */
-function rootBody(css: string): string {
+/** Selector under which the theme custom properties must be defined. */
+function themeSelector(id: string): string {
+  return `.mdblock[data-theme="${id}"]`;
+}
+
+const THEME_A_SELECTOR = themeSelector(THEME_A.id);
+const THEME_B_SELECTOR = themeSelector(THEME_B.id);
+
+/** Body of the first rule matching `selector` (declarations only). */
+function ruleBody(css: string, selector: string): string {
   const lines = css.split("\n");
-  const start = lines.findIndex((line) => line.trim() === ".mdblock {");
-  if (start === -1) throw new Error("no top-level .mdblock rule found");
+  const start = lines.findIndex((line) => line.trim() === `${selector} {`);
+  if (start === -1) throw new Error(`no rule found for ${selector}`);
   const end = lines.indexOf("}", start);
-  if (end === -1) throw new Error("unterminated .mdblock rule");
+  if (end === -1) throw new Error(`unterminated rule for ${selector}`);
   return lines.slice(start + 1, end).join("\n");
+}
+
+/** Body of the bare `.mdblock` frame rule. */
+function rootBody(css: string): string {
+  return ruleBody(css, ".mdblock");
 }
 
 /** Selector text of every rule, comments stripped. */
@@ -172,19 +185,44 @@ function collectStrings(value: unknown, out: string[] = []): string[] {
 /* ── tests ────────────────────────────────────────────────────────────── */
 
 describe("renderCss", () => {
-  test("defines every contract variable on .mdblock", () => {
+  test("defines every contract variable on .mdblock[data-theme=...] not bare .mdblock", () => {
     const css = renderCss(THEME_A, OPTIONS);
-    const root = rootBody(css);
+    const scoped = ruleBody(css, THEME_A_SELECTOR);
+    const bare = rootBody(css);
 
     expect(ALL_VARS).toHaveLength(32);
     for (const variable of ALL_VARS) {
-      expect(root).toContain(`${variable}:`);
+      expect(scoped).toContain(`${variable}:`);
+      expect(bare).not.toContain(`${variable}:`);
     }
+  });
+
+  test("scopes variables per theme id so two themes can coexist", () => {
+    const cssA = renderCss(THEME_A, OPTIONS);
+    const cssB = renderCss(THEME_B, OPTIONS);
+
+    const scopedA = ruleBody(cssA, THEME_A_SELECTOR);
+    const scopedB = ruleBody(cssB, THEME_B_SELECTOR);
+
+    expect(cssA).toContain(`${THEME_A_SELECTOR} {`);
+    expect(cssB).toContain(`${THEME_B_SELECTOR} {`);
+    expect(cssA).not.toContain(`${THEME_B_SELECTOR} {`);
+    expect(cssB).not.toContain(`${THEME_A_SELECTOR} {`);
+
+    for (const variable of ALL_VARS) {
+      expect(scopedA).toContain(`${variable}:`);
+      expect(scopedB).toContain(`${variable}:`);
+      expect(rootBody(cssA)).not.toContain(`${variable}:`);
+      expect(rootBody(cssB)).not.toContain(`${variable}:`);
+    }
+
+    expect(scopedA).toContain(`--mdblock-bg: ${THEME_A.colors.bg};`);
+    expect(scopedB).toContain(`--mdblock-bg: ${THEME_B.colors.bg};`);
   });
 
   test("highlight variables carry the theme token values", () => {
     const css = renderCss(THEME_A, OPTIONS);
-    const root = rootBody(css);
+    const root = ruleBody(css, THEME_A_SELECTOR);
 
     expect(root).toContain(`${SHIKI_FOREGROUND_VAR}: ${THEME_A.colors.codeText};`);
     expect(root).toContain(`${SHIKI_BACKGROUND_VAR}: ${THEME_A.colors.codeBg};`);
@@ -211,23 +249,28 @@ describe("renderCss", () => {
   });
 
   test("maps border and shadow none values", () => {
-    const root = rootBody(renderCss(THEME_A, withOptions({ shadow: "none" })));
+    const root = ruleBody(
+      renderCss(THEME_A, withOptions({ shadow: "none" })),
+      THEME_A_SELECTOR,
+    );
     expect(root).toContain("--mdblock-border: none;");
     expect(root).toContain("--mdblock-shadow: none;");
   });
 
   test("passes through an explicit border", () => {
-    const root = rootBody(
+    const root = ruleBody(
       renderCss(THEME_A, withOptions({ border: "2px solid red" })),
+      THEME_A_SELECTOR,
     );
     expect(root).toContain("--mdblock-border: 2px solid red;");
   });
 
   test("gives the three shadow presets distinct values", () => {
     const value = (shadow: Options["shadow"]): string => {
-      const match = rootBody(renderCss(THEME_A, withOptions({ shadow }))).match(
-        /--mdblock-shadow: (.+);/,
-      );
+      const match = ruleBody(
+        renderCss(THEME_A, withOptions({ shadow })),
+        THEME_A_SELECTOR,
+      ).match(/--mdblock-shadow: (.+);/);
       if (!match || !match[1]) throw new Error(`no shadow for ${shadow}`);
       return match[1];
     };
@@ -238,20 +281,27 @@ describe("renderCss", () => {
   });
 
   test("uses the theme bg when options.bg is null and the override otherwise", () => {
-    const fromTheme = rootBody(renderCss(THEME_A, OPTIONS));
+    const fromTheme = ruleBody(renderCss(THEME_A, OPTIONS), THEME_A_SELECTOR);
     expect(fromTheme).toContain(`--mdblock-bg: ${THEME_A.colors.bg};`);
 
-    const overridden = rootBody(
+    const overridden = ruleBody(
       renderCss(THEME_A, withOptions({ bg: "#123456" })),
+      THEME_A_SELECTOR,
     );
     expect(overridden).toContain("--mdblock-bg: #123456;");
   });
 
   test("adds all: revert first only when hardIsolation is true", () => {
-    const isolated = rootBody(renderCss(THEME_A, withOptions({ hardIsolation: true })));
+    const isolated = ruleBody(
+      renderCss(THEME_A, withOptions({ hardIsolation: true })),
+      THEME_A_SELECTOR,
+    );
     expect(isolated.trimStart().startsWith("all: revert;")).toBe(true);
 
-    const plain = rootBody(renderCss(THEME_A, withOptions({ hardIsolation: false })));
+    const plain = ruleBody(
+      renderCss(THEME_A, withOptions({ hardIsolation: false })),
+      THEME_A_SELECTOR,
+    );
     expect(plain).not.toContain("all: revert");
   });
 
@@ -263,13 +313,17 @@ describe("renderCss", () => {
       ...collectStrings(THEME_A.colors),
       ...collectStrings(THEME_B.colors),
     ];
+    const normalize = (css: string, id: string): string =>
+      css.split(themeSelector(id)).join(themeSelector("<id>"));
     const stripColorLines = (css: string): string =>
       css
         .split("\n")
         .filter((line) => !allColors.some((color) => line.includes(color)))
         .join("\n");
 
-    expect(stripColorLines(cssA)).toBe(stripColorLines(cssB));
+    expect(stripColorLines(normalize(cssA, THEME_A.id))).toBe(
+      stripColorLines(normalize(cssB, THEME_B.id)),
+    );
 
     const layoutOf = (css: string): string[] =>
       css
