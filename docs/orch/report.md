@@ -63,7 +63,8 @@ agent 计算时长合计 46.7 分钟，中位 199 s，最长 770 s（M1，含 4 
 
 | # | 缺陷 | 影响 |
 |---|---|---|
-| P-1 | `protocol.py record` 硬编码 herdr pane 正则 `w[0-9]+:p[0-9]+`（`scripts/protocol.py:264`），而本机 herdr 生成的 workspace id 是 `wF` | `record` 一律 `rc=3`，`resources.json` 无法生成。**只能用 controller receipt 替代**；round 协议本身不依赖它 |
+| P-1 | `protocol.py record` 硬编码 herdr pane 正则 `w[0-9]+:p[0-9]+`（`scripts/protocol.py:264`），而本机 herdr 生成的 workspace id 是 `wF` | `record` 一律 `rc=3`，`resources.json` 无法生成。**只能用 controller receipt 替代**。**连带后果：`cleanup-plan` 也是 `rc=2`（找不到 resources.json），收尾只能手工做** |
+| P-9 | **M5 的 worktree 里 `.git` 变成了空目录、git 注册也消失**（`.git/worktrees/` 里没有它）。症状：`git commit` 无条件失败；`git worktree list` 不认这个目录；`git worktree remove` 报「不是一个工作区」 | codex 花了大半个会话诊断「为什么提交不了」，最后用「把主仓库 rsync 进自己的 cwd 重建状态」绕过 —— 这一步顺带把 `.worktrees/` 也复制了进去，**产生 41 GB 脚手架**（收尾已删）。**根因未定论**：候选 A 是我的 `git worktree add` 跑在后台作业里、240 s 超时被 kill（但 add 本身已完成，解释力弱）；候选 B 是 codex workspace-write 沙箱不支持 worktree 的 `.git` 指针文件（agent 自己的观察：「这里的 .git 是个空的假目录，沙箱产物」）。**两种都没验证，不做断言。** 值得记的是：**这没有导致交付失败** —— M5 的 5 个文件正确且已合并，160 个测试全绿 |
 | P-5 | `agent prompt` 对 **codex** 吞长 prompt：约 9 KB 的 `prompt.txt` 提交返回 `rc 0`，但 TUI composer 保持空、pane 缓冲里搜不到任何片段 | **静默失败**。hermes / opencode / omp 三个都能收长 prompt，只有 codex 不行。兜底：发短指令指向 `prompt.txt` 路径，再让它自己读 |
 | P-7 | herdr + fish 启动竞态（9 次启动中 2 次）：`agent start` 把命令敲进 fish 但没执行，120 s 超时退出，**且没有注册 agent 名字** | 后续 `agent prompt <name>` 报 `agent_not_found`。按 transports 配方：确认前台是 shell 且待执行行就是该命令 → 发一个回车 → `agent rename <pane> <name>` 补绑 |
 | P-8 | codex 逐命令网络审批：`--search` 只给原生 web_search，**shell 联网仍走审批** | M1 全程消耗控制方 **4 次审批往返**。第 3 次起提供「对 `cd /tmp/pal` 前缀不再询问」后脱身 |
@@ -119,10 +120,12 @@ M3 越界读拒绝 ×1）。**没有一次返工是 agent 之间的冲突** —�
 ## 5. 各 agent 的行为画像
 
 **codex（M1 / M4b / M5）**
-- 长 prompt 静默不落地（P-5）；逐命令网络审批（P-8）；worktree 提交需 `--add-dir .git`（P-6）。
+- 长 prompt 静默不落地（P-5）；逐命令网络审批（P-8）；worktree 提交需 `--add-dir .git`（P-6）；
+  M5 还撞上 worktree 的 `.git` 失效（P-9），并用 rsync 主仓库的方式绕过 —— 代价 41 GB。
 - 报告极其详尽：M5 贴出逐条真命令与输出、四个错误码、换主题不变性探针结果。
 - **M5 主动上报控制方的 harness bug，并明确声明「这是 M6 文件，我没有动」** —— 边界意识正确。
 - M4b 的实现在盲评中**胜出**。
+- M1 拿到 `max_depth=3` 却**没有**派子代理（见 §1）。
 
 **hermes（M2 / 盲评）**
 - 启动竞态一次（P-7），回车救回。
