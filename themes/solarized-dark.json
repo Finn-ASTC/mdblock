@@ -1,0 +1,33 @@
+{
+  "id": "solarized-dark",
+  "name": "Solarized Dark",
+  "family": "solarized",
+  "mode": "dark",
+  "source": "https://ethanschoonover.com/solarized",
+  "colors": {
+    "bg": "#002b36",
+    "surface": "#073642",
+    "text": "#839496",
+    "heading": "#93a1a1",
+    "muted": "#586e75",
+    "border": "#073642",
+    "accent": "#268bd2",
+    "accentAlt": "#6c71c4",
+    "codeBg": "#073642",
+    "codeText": "#839496",
+    "syntax": {
+      "string": "#2aa198",
+      "comment": "#586e75",
+      "constant": "#cb4b16",
+      "keyword": "#859900",
+      "parameter": "#b58900",
+      "function": "#268bd2",
+      "stringExpression": "#2aa198",
+      "punctuation": "#93a1a1",
+      "link": "#268bd2",
+      "inserted": "#859900",
+      "deleted": "#dc322f",
+      "changed": "#b58900"
+    }
+  }
+}
