@@ -1,0 +1,33 @@
+{
+  "id": "catppuccin-frappe",
+  "name": "Catppuccin Frappé",
+  "family": "catppuccin",
+  "mode": "dark",
+  "source": "https://github.com/catppuccin/palette",
+  "colors": {
+    "bg": "#303446",
+    "surface": "#414559",
+    "text": "#b5bfe2",
+    "heading": "#c6d0f5",
+    "muted": "#838ba7",
+    "border": "#51576d",
+    "accent": "#8caaee",
+    "accentAlt": "#ca9ee6",
+    "codeBg": "#292c3c",
+    "codeText": "#c6d0f5",
+    "syntax": {
+      "string": "#a6d189",
+      "comment": "#838ba7",
+      "constant": "#ef9f76",
+      "keyword": "#ca9ee6",
+      "parameter": "#e5c890",
+      "function": "#8caaee",
+      "stringExpression": "#81c8be",
+      "punctuation": "#a5adce",
+      "link": "#99d1db",
+      "inserted": "#a6d189",
+      "deleted": "#e78284",
+      "changed": "#e5c890"
+    }
+  }
+}
