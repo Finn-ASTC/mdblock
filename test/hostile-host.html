@@ -4,17 +4,20 @@
 <meta charset="utf-8">
 <title>mdblock 敌意宿主页</title>
 <style>
-  /* ── 第一层：真实世界的宿主页面 ──────────────────────────────────────
-     Tailwind preflight 风格的全局 reset + 常见的壳层样式。
-     全部是普通特异性、无 !important —— 这是文章块真正要活下来的环境。 */
-  *, ::before, ::after { box-sizing: border-box; }
+  /* ══════════════════════════════════════════════════════════════════
+     L1 · 普通宿主页面（验收要求：文章块必须完全不受影响）
+     Tailwind preflight 式全局 reset + 常见的壳层样式 + 宿主的排字癖。
+     全部是普通特异性、无 !important：`.mdblock X`（0,1,1）都能压过裸元素选择器。
+     ══════════════════════════════════════════════════════════════════ */
+  *, ::before, ::after { box-sizing: content-box; }   /* 我们声明了 border-box，必须赢回来 */
   * { margin: 0; padding: 0; }
   body {
     font-family: cursive;
     font-size: 14px;
     line-height: 2.4;
-    letter-spacing: 0.35em;      /* 宿主排字癖：普通块会被继承 */
+    letter-spacing: 0.35em;      /* 宿主排字癖：取决于根元素是否中性化继承 */
     text-transform: uppercase;   /* 同上 */
+    word-spacing: 0.5em;
     color: #b00;
     background: #f6f6f6;
     padding: 24px;
@@ -25,6 +28,7 @@
   a:hover { color: #0a0; }
   img { max-width: 16px; }
   ul, ol { list-style: none; padding-left: 0; }
+  li { margin: 0.1em 0; }
   table { border-collapse: separate; border-spacing: 8px; }
   th, td { border: 3px dotted hotpink; text-align: right; }
   code, pre {
@@ -32,40 +36,63 @@
     background: yellow;
     color: navy;
     padding: 10px;
+    font-size: 11px;
   }
   blockquote { border-left: 8px solid lime; padding: 0 40px; background: pink; }
-  hr { height: 12px; background: orange; }
-  /* 高特异性宿主规则：命名空间选择器（0,2,1）压过我们的 .mdblock p（0,1,1） */
-  .article-body .prose p { line-height: 1.05; color: #808080; }
-  .article-body .prose a { color: #d00; }
+  hr { height: 12px; background: orange; border: 0; }
+  strong { font-weight: 400; }
+  del { color: green; }
 
-  .host-note { color: #333; font-size: 12px; letter-spacing: normal; text-transform: none;
-               font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.6;
-               margin: 0 0 10px; }
-  .host-note code { padding: 1px 4px; background: #eee; color: #333; font-family: monospace; }
+  /* 页面自己的说明区（这些类名不会出现在文章块的祖先链上） */
+  .host-note { color: #333; font-size: 12px; letter-spacing: normal; word-spacing: normal;
+               text-transform: none; font-family: ui-sans-serif, system-ui, sans-serif;
+               line-height: 1.6; margin: 14px 0 6px; }
+  .host-note code { padding: 1px 4px; background: #eee; color: #333;
+                    font-family: ui-monospace, monospace; font-size: 12px; }
+  .section-head { font-size: 15px; letter-spacing: normal; text-transform: none;
+                  font-family: ui-sans-serif, system-ui, sans-serif; color: #111;
+                  margin: 26px 0 2px; padding: 6px 0; border-top: 2px solid #333; }
+
+  /* ══════════════════════════════════════════════════════════════════
+     L2/L3 · 已知限制（块 D 专用，不参与验收断言）
+     命名空间 CSS 的边界：宿主规则只要特异性高过 `.mdblock X`，或带 !important，
+     就会压过我们。`--hard-isolation` 的 `all: revert` 只作用于根元素自身，
+     挡不住后代上的高特异性 / !important 规则。
+     ══════════════════════════════════════════════════════════════════ */
+  .limit-demo .prose p { color: #808080; line-height: 1.05; }
+  .limit-demo .prose a { color: #d00; }
+  .limit-demo pre { background: yellow !important; font-family: cursive !important; }
 </style>
 </head>
 <body>
 
 <p class="host-note">
-  这是<b>敌意宿主页</b>：全局 reset（<code>*{margin:0;padding:0}</code>）、
-  <code>body</code> 上的 <code>letter-spacing:.35em</code> / <code>text-transform:uppercase</code> /
-  花体字体、加料的表格/代码/引用样式，以及一条高特异性规则
-  <code>.article-body .prose p</code>。所有样式故意写得很丑 —— 只有文章块必须不受影响。
+  这是<b>敌意宿主页</b>。L1 层是普通特异性的宿主样式，文章块必须完全不受影响。
+  L2/L3 层是已知限制的演示，不是验收目标。
 </p>
 
-<div class="article-body">
+<h2 class="section-head">L1 · 普通宿主（验收断言在这一层）</h2>
+<p class="host-note">
+  全局 reset（<code>*{margin:0;padding:0}</code>、<code>box-sizing:content-box</code>）、
+  <code>body</code> 上的 <code>letter-spacing:.35em</code> /
+  <code>text-transform:uppercase</code> / <code>word-spacing:.5em</code> / 花体字体，
+  以及加料的表格、代码、引用、列表样式。三个块分别是两个浅/深主题与一个
+  <code>--hard-isolation</code> 块。
+</p>
+
+<!--BLOCKS-L1-->
+
+<h2 class="section-head">L2/L3 · 已知限制（不参与断言，仅演示）</h2>
+<p class="host-note">
+  下面这一块被 <code>.limit-demo .prose</code> 包着，宿主在那里用了特异性更高的选择器
+  （<code>.limit-demo .prose p</code>）和 <code>!important</code>。它<b>会</b>被穿透 ——
+  这是 v1 的已知边界，不是缺陷隐瞒：命名空间 CSS 无法胜过任意特异性的宿主规则，
+  而 <code>--hard-isolation</code> 的 <code>all: revert</code> 只作用于根元素自身。
+</p>
+
+<div class="limit-demo">
   <div class="prose">
-
-    <p class="host-note">A · catppuccin-latte · 普通隔离</p>
-    <!--MD-BLOCK-A-->
-
-    <p class="host-note">B · catppuccin-mocha · 普通隔离（验证同页多主题共存）</p>
-    <!--MD-BLOCK-B-->
-
-    <p class="host-note">C · nord · <code>--hard-isolation</code>（验证 all:revert 的效果）</p>
-    <!--MD-BLOCK-C-->
-
+    <!--BLOCK-L2-->
   </div>
 </div>
 
