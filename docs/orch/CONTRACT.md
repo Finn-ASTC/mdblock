@@ -89,6 +89,9 @@ export function renderCss(theme: Theme, options: Options): string;
 - `--shiki-foreground` = `theme.colors.codeText`；`--shiki-background` = `theme.colors.codeBg`。
 - `options.hardIsolation === true` 时，在 `.mdblock` 上追加 `all: revert`（放在规则最前，
   让后续声明重新接管需要的属性）。
+- **在 `.mdblock` 上显式声明全部继承型排版属性**，让文章块不继承宿主的排字设置。至少覆盖
+  `letter-spacing` `word-spacing` `text-transform` `font-variant` `font-style` `font-weight`
+   `text-align` `text-indent` `white-space`，各给中性值。见修订 A-2。
 - 需要覆盖：标题层级、段落、列表（含嵌套与任务列表）、引用块、表格（含表头与
   `:nth-child` 斑马纹）、分隔线、行内代码、代码块、链接（含 `:hover`）、图片、
   脚注样式不必做。用 `color-mix(in oklab, ...)` 派生 hover / 斑马纹 / 分割线等
@@ -254,3 +257,23 @@ bunx tsc --noEmit # 类型必须干净（你自己的 worktree 里）
 **代价**：用户手写覆盖变量时选择器要写成 `.mdblock[data-theme="<id>"]`（或更高特异性），
 而不是裸 `.mdblock`。这是标准主题系统写法，可接受。
 **其它规则不变**：非变量规则仍然全部挂在 `.mdblock` 上，`N1` 不变。
+
+### A-2 · 根元素显式声明全部继承型排版属性
+
+**谁改的**：控制方（Wave 1 末尾，M3 第 2 轮验收时对照已批准的设计 spec 发现）。
+**为什么**：设计 spec §2 写明隔离方案是「根上显式声明全部继承型属性
+（color/font-family/font-size/line-height/text-align/letter-spacing…）」，但 Wave 0 的
+契约正文只列了变量清单与元素覆盖，**漏掉了这条要求**，于是 M3 按字面完成，产出的
+`.mdblock` 会原样继承宿主的 `letter-spacing` / `text-transform` 等排字设置 ——
+宿主页上文章块会被拉宽字距、整块变大写。`--hard-isolation` 能挡住，但那是可选项，
+默认产物不该有这种残留。
+
+**要求**：`.mdblock` 规则里显式给中性值，至少
+`letter-spacing: normal` `word-spacing: normal` `text-transform: none`
+`font-variant: normal` `font-style: normal` `font-weight: normal`
+`text-align: start` `text-indent: 0` `white-space: normal`。
+
+**已知边界（不修）**：宿主带 `!important` 的 descendant 规则（`p{color:red!important}`）
+仍然会穿透 —— `all: revert` 只作用于根元素自身，挡不住后代上的 `!important`。这是 v1
+的已知限制，写进 README 即可，不要用 `!important` 去对轰（N3）。
+**影响面**：仅 `src/css.ts`（M3 第 3 轮）。
