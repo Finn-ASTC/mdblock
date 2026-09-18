@@ -9,7 +9,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "accept": "bun test/acceptance.mjs"
+    "accept": "bun test/acceptance.ts"
   },
   "dependencies": {
     "markdown-it": "^15.0.2",

@@ -70,7 +70,8 @@ export function validateTheme(data: unknown, opts?: { baseDir?: string }): Theme
 export function renderCss(theme: Theme, options: Options): string;
 ```
 
-必须在 `.mdblock` 上定义下列**全部**变量（这是公开 API，用户会手写覆盖它们）：
+必须在 **`.mdblock[data-theme="<theme.id>"]`** 上定义下列**全部**变量（这是公开 API，
+用户会手写覆盖它们）。**不是**裸 `.mdblock` —— 见文末修订 A-1：
 
 | 组 | 变量 |
 |---|---|
@@ -224,3 +225,32 @@ bunx tsc --noEmit # 类型必须干净（你自己的 worktree 里）
 - 路径用 `/`、相对 cwd、不含 `..`。别把 `node_modules/` 写进去。
 - `output` 里不要声称没跑过的测试。**声称跑过就必须贴命令和输出。**
 - 不要用 Markdown 代码围栏包 JSON，不要有重复键。
+
+## 6. 修订记录
+
+### A-1 · 主题变量定义在 `.mdblock[data-theme="<id>"]` 而非裸 `.mdblock`
+
+**谁改的**：控制方（Wave 1 进行中，M6 验收设施构建阶段发现）。
+**为什么**：原契约要求变量定义在裸 `.mdblock` 上。同一页贴两篇不同主题的文章块时，
+两份样式表都含同特异性的 `.mdblock{--mdblock-bg:…}`，文档序后者通吃，**两个块都会被
+染成后加载的配色**，「同一页多主题共存」这条设计承诺不成立。
+
+实证（`.orchestrator/probe/var-collision.html`，Chromium `getComputedStyle`）：
+
+```
+块 A data-theme=catppuccin-latte  期望 #eff1f5  → 实际 rgb(30,30,46)   ✗
+块 B data-theme=catppuccin-mocha  期望 #1e1e2e  → 实际 rgb(30,30,46)   ✓（碰巧）
+```
+
+修法（`.orchestrator/probe/var-scoped.html`，同一方法验证）：
+
+```
+.mdblock[data-theme="catppuccin-latte"]{--mdblock-bg:#eff1f5;…}
+块 A → rgb(239,241,245) = #eff1f5  ✓   块 B → rgb(30,30,46) = #1e1e2e  ✓
+```
+
+**影响面**：`src/css.ts`（M3）需改变量定义选择器；`render.ts`（M4）本来就产出
+`data-theme`，无需改动；`options.ts` / `build.ts` / `cli.ts`（M5）不受影响。
+**代价**：用户手写覆盖变量时选择器要写成 `.mdblock[data-theme="<id>"]`（或更高特异性），
+而不是裸 `.mdblock`。这是标准主题系统写法，可接受。
+**其它规则不变**：非变量规则仍然全部挂在 `.mdblock` 上，`N1` 不变。
