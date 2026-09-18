@@ -136,6 +136,25 @@ ${highlightVars}
 /* ── box model ─────────────────────────────────────────────────────── */
 .mdblock *, .mdblock *::before, .mdblock *::after { box-sizing: border-box; }
 
+/* ── text colour belongs to us, not to the host ───────────────────────
+   Root colour is not enough: inheritance loses to ANY rule that hits a
+   descendant directly, so a host rule like "p { color: … }" (specificity
+   0,0,1) would recolour our body text. Pinning "color: inherit" on every
+   descendant at specificity 0,1,0 makes the host's bare-element rules
+   lose, while our own colour rules (headings, links, code, quotes) are
+   more specific and still win. */
+.mdblock * { color: inherit; }
+
+/* Same idea one specificity step up: a host rule such as ".prose p" is
+   0,1,1 and would beat the catch-all above, so the elements we actually
+   emit get their own 0,1,1 rule. Ties are then decided by document order,
+   and our stylesheet is inlined inside the block — after the host's.
+   Elements that carry their own colour (headings, links, code, quotes,
+   deletion marks) are left out so their rules below still win. */
+.mdblock p, .mdblock li, .mdblock td, .mdblock th, .mdblock dd, .mdblock dt,
+.mdblock span, .mdblock em, .mdblock strong, .mdblock sup, .mdblock sub,
+.mdblock label, .mdblock input, .mdblock kbd { color: inherit; }
+
 /* ── flow: paragraphs ──────────────────────────────────────────────── */
 .mdblock p { margin: 0.9em 0; }
 .mdblock > :first-child { margin-top: 0; }

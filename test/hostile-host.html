@@ -23,7 +23,11 @@
     padding: 24px;
   }
   h1, h2, h3 { font-size: 13px; color: #06c; }
-  p { line-height: 1.1; }
+  /* 宿主直接命中后代元素的颜色规则：特异性最低也是 (0,0,1)，
+     只要我们的后代规则缺席，它就会赢过我们从根元素继承来的颜色 */
+  p { line-height: 1.1; color: #b00; }
+  li { color: #0b0; }
+  td { color: #00b; }
   a { color: #00f; text-decoration: none; }
   a:hover { color: #0a0; }
   img { max-width: 16px; }
@@ -62,6 +66,13 @@
   .limit-demo .prose p { color: #808080; line-height: 1.05; }
   .limit-demo .prose a { color: #d00; }
   .limit-demo pre { background: yellow !important; font-family: cursive !important; }
+
+  /* L1.5 · 宿主的「prose 容器」写法：单类 + 元素 = (0,1,1)，与我们的后代规则打平，
+     靠文档序决定 —— 我们的 <style> 内联在块里，晚于宿主 <head> 里的样式表，所以我们赢。
+     这一层是真实博客最常见的形态（Tailwind Typography 的 .prose 就是这一档）。 */
+  .host-shell p { color: #b0b; }
+  .host-shell td { color: #b0b; }
+  .host-shell li { color: #b0b; }
 </style>
 </head>
 <body>
@@ -80,7 +91,9 @@
   <code>--hard-isolation</code> 块。
 </p>
 
+<div class="host-shell">
 <!--BLOCKS-L1-->
+</div>
 
 <h2 class="section-head">L2/L3 · 已知限制（不参与断言，仅演示）</h2>
 <p class="host-note">

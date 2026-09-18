@@ -327,6 +327,11 @@ const PROBE = `
       wordSpacing: g.wordSpacing,
       boxSizing: g.boxSizing,
       preFontSize: gpre ? gpre.fontSize : null,
+      liColor: gli ? gli.color : null,
+      tdColor: (function () {
+        var td = root.querySelector("td");
+        return td ? getComputedStyle(td).color : null;
+      })(),
       strongFontWeight: (function () {
         var s = root.querySelector("strong");
         return s ? getComputedStyle(s).fontWeight : null;
@@ -364,6 +369,9 @@ const PROBE = `
   });
   var uniforms = codeColors.length > 0 && codeColors.every(function (c) { return c === codeColors[0]; });
   expect("L1-11", "所有代码块内层 code 字色一致（缩进块 vs 围栏块）", uniforms ? "same" : codeColors.join(" | "), "same");
+  expect("L1-13", "段落文字色 = 文章块主题色（未被宿主 p{color} 改掉）", A.pColor, A.color);
+  expect("L1-14", "列表项文字色 = 文章块主题色（未被宿主 li{color} 改掉）", A.liColor, A.color);
+  expect("L1-15", "表格单元文字色 = 文章块主题色（未被宿主 td{color} 改掉）", A.tdColor, A.color);
   Object.keys(report).forEach(function (k) {
     lines.push("块 " + k + "  data-theme=" + (report[k] ? report[k].dataTheme : "?") +
       "\\n  bg=" + (report[k] ? report[k].background : "-") +
