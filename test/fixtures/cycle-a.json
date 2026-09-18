@@ -1,0 +1,7 @@
+{
+  "name": "Fixture Cycle A",
+  "extends": "./cycle-b.json",
+  "colors": {
+    "accent": "#ff0000"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "fixture-extends-top",
+  "name": "Fixture Extends Top",
+  "family": "fixture-top",
+  "extends": "./extends-mid.json",
+  "colors": {
+    "heading": "#abcdef",
+    "syntax": {
+      "keyword": "#0f0f0f"
+    }
+  }
+}
