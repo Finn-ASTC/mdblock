@@ -69,6 +69,9 @@ function textOf(html: string): string {
     .replace(/&amp;/g, "&");
 }
 
+/** 取出输出里的全部代码块，用于比对两种代码块形态。 */
+const CODE_BLOCK_RE = /<pre class="mdblock-code">[\s\S]*?<\/pre>/g;
+
 const DOC = `# 大标题
 
 段落，含 [链接](https://example.com/one) 和 \`inline code\`。
@@ -183,6 +186,43 @@ describe("代码块", () => {
   test("空围栏块不抛错", async () => {
     const html = await renderMarkdown("```ts\n```\n", theme, options);
     expect(html).toContain('<pre class="mdblock-code"><code class="language-ts">');
+  });
+});
+
+describe("缩进式代码块", () => {
+  test("4 空格缩进的代码块与未标语言围栏块逐字同形", async () => {
+    const indented = await renderMarkdown("正文\n\n    code <b>raw</b>\n    second line\n", theme, options);
+    const fenced = await renderMarkdown("```\ncode <b>raw</b>\nsecond line\n```\n", theme, options);
+    expect(indented.match(CODE_BLOCK_RE)).toHaveLength(1);
+    expect(indented.match(CODE_BLOCK_RE)).toEqual(fenced.match(CODE_BLOCK_RE));
+    expect(indented).toContain('<pre class="mdblock-code"><code class="language-text">');
+    expect(indented).toContain("&lt;b&gt;raw&lt;/b&gt;");
+    expect(indented).not.toContain("<pre><code>");
+  });
+
+  test("列表项内的缩进代码块走同一条管线", async () => {
+    const html = await renderMarkdown("- 步骤\n\n      code <i>here</i>\n", theme, options);
+    expect(html).toContain("<li>");
+    expect(html.match(CODE_BLOCK_RE)).toHaveLength(1);
+    expect(html).toContain("&lt;i&gt;here&lt;/i&gt;");
+    expect(html).not.toContain("<pre><code>");
+  });
+
+  test("缩进代码块与围栏块混排：两种形态都被正确处理", async () => {
+    const doc = "```ts\nconst a: number = 1;\n```\n\n    plain indent\n\n```\nunlabeled fence\n```\n";
+    const html = await renderMarkdown(doc, theme, options);
+    expect(html.match(CODE_BLOCK_RE)).toHaveLength(3);
+    expect(html.match(/class="language-ts"/g)).toHaveLength(1);
+    expect(html.match(/class="language-text"/g)).toHaveLength(2);
+    expect(html).not.toContain("<pre><code>");
+    expect(LITERAL_COLOR_RE.test(html)).toBe(false);
+  });
+
+  test("缩进代码块的内容被转义且不引入字面色值", async () => {
+    const html = await renderMarkdown("    <script>alert(1)</script> and stuff\n", theme, options);
+    expect(html).not.toContain("<script");
+    expect(html).toContain("&lt;script&gt;");
+    expect(LITERAL_COLOR_RE.test(html)).toBe(false);
   });
 });
 
