@@ -80,6 +80,17 @@ export function renderCss(theme: Theme, options: Options): string {
   border-radius: var(--mdblock-radius);
   box-shadow: var(--mdblock-shadow);
   overflow-wrap: break-word;
+
+  /* do not inherit host typography (spacing, casing, alignment, ...) */
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-transform: none;
+  font-variant: normal;
+  font-style: normal;
+  font-weight: normal;
+  text-align: start;
+  text-indent: 0;
+  white-space: normal;
 }
 
 /* ── theme custom properties (scoped by data-theme) ────────────────── */
@@ -207,6 +218,7 @@ ${highlightVars}
   margin: 1.1em 0;
   padding: 1em 1.25em;
   overflow-x: auto;
+  white-space: pre;
   color: var(--mdblock-code-text);
   background: var(--mdblock-code-bg);
   border: 1px solid color-mix(in oklab, var(--mdblock-border-color) 60%, transparent);

@@ -137,6 +137,19 @@ const LAYOUT_VARS = [
   "--mdblock-font-family",
 ] as const;
 
+/** Inherited typography properties that `.mdblock` must neutralise. */
+const INHERITED_NEUTRALS: ReadonlyArray<readonly [string, string]> = [
+  ["letter-spacing", "normal"],
+  ["word-spacing", "normal"],
+  ["text-transform", "none"],
+  ["font-variant", "normal"],
+  ["font-style", "normal"],
+  ["font-weight", "normal"],
+  ["text-align", "start"],
+  ["text-indent", "0"],
+  ["white-space", "normal"],
+];
+
 function withOptions(overrides: Partial<Options>): Options {
   return { ...OPTIONS, ...overrides };
 }
@@ -246,6 +259,21 @@ describe("renderCss", () => {
 
   test("never uses !important", () => {
     expect(renderCss(THEME_A, OPTIONS)).not.toContain("!important");
+  });
+
+  test("neutralises host-inherited typography on .mdblock", () => {
+    const root = rootBody(renderCss(THEME_A, OPTIONS));
+    for (const [property, value] of INHERITED_NEUTRALS) {
+      expect(root).toContain(`${property}: ${value};`);
+    }
+  });
+
+  test("the code block owns its white-space: pre", () => {
+    const pre = ruleBody(
+      renderCss(THEME_A, OPTIONS),
+      ".mdblock pre, .mdblock .mdblock-code",
+    );
+    expect(pre).toContain("white-space: pre;");
   });
 
   test("maps border and shadow none values", () => {
