@@ -1,0 +1,23 @@
+{
+  "name": "mdblock",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "mdblock": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "accept": "bun test/acceptance.mjs"
+  },
+  "dependencies": {
+    "markdown-it": "^15.0.2",
+    "markdown-it-task-lists": "^2.1.1",
+    "shiki": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.2",
+    "@types/markdown-it": "^14.2.0"
+  }
+}

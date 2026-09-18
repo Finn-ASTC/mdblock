@@ -1,0 +1,33 @@
+{
+  "id": "example",
+  "name": "形状示例（不是内置主题）",
+  "family": "example",
+  "mode": "dark",
+  "source": "https://example.invalid/this-is-a-shape-example",
+  "colors": {
+    "bg": "#101014",
+    "surface": "#18181f",
+    "text": "#e6e6ea",
+    "heading": "#ffffff",
+    "muted": "#8a8a99",
+    "border": "#2a2a33",
+    "accent": "#7aa2f7",
+    "accentAlt": "#bb9af7",
+    "codeBg": "#16161d",
+    "codeText": "#dcdce4",
+    "syntax": {
+      "string": "#9ece6a",
+      "comment": "#5c6370",
+      "constant": "#ff9e64",
+      "keyword": "#bb9af7",
+      "parameter": "#e0af68",
+      "function": "#7aa2f7",
+      "stringExpression": "#9ece6a",
+      "punctuation": "#9aa5ce",
+      "link": "#73daca",
+      "inserted": "#9ece6a",
+      "deleted": "#f7768e",
+      "changed": "#e0af68"
+    }
+  }
+}

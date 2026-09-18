@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mdblock.local/themes/_schema.json",
+  "title": "mdblock 主题文件",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "family": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "mode": { "enum": ["dark", "light"] },
+    "source": { "type": "string", "minLength": 1 },
+    "extends": { "type": "string", "minLength": 1 },
+    "colors": { "$ref": "#/$defs/colors" }
+  },
+  "allOf": [
+    {
+      "if": { "not": { "required": ["extends"] } },
+      "then": { "required": ["colors"] }
+    }
+  ],
+  "$defs": {
+    "color": { "type": "string", "minLength": 1 },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bg": { "$ref": "#/$defs/color" },
+        "surface": { "$ref": "#/$defs/color" },
+        "text": { "$ref": "#/$defs/color" },
+        "heading": { "$ref": "#/$defs/color" },
+        "muted": { "$ref": "#/$defs/color" },
+        "border": { "$ref": "#/$defs/color" },
+        "accent": { "$ref": "#/$defs/color" },
+        "accentAlt": { "$ref": "#/$defs/color" },
+        "codeBg": { "$ref": "#/$defs/color" },
+        "codeText": { "$ref": "#/$defs/color" },
+        "syntax": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "string": { "$ref": "#/$defs/color" },
+            "comment": { "$ref": "#/$defs/color" },
+            "constant": { "$ref": "#/$defs/color" },
+            "keyword": { "$ref": "#/$defs/color" },
+            "parameter": { "$ref": "#/$defs/color" },
+            "function": { "$ref": "#/$defs/color" },
+            "stringExpression": { "$ref": "#/$defs/color" },
+            "punctuation": { "$ref": "#/$defs/color" },
+            "link": { "$ref": "#/$defs/color" },
+            "inserted": { "$ref": "#/$defs/color" },
+            "deleted": { "$ref": "#/$defs/color" },
+            "changed": { "$ref": "#/$defs/color" }
+          }
+        }
+      }
+    }
+  }
+}
