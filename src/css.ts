@@ -71,7 +71,7 @@ export function renderCss(theme: Theme, options: Options): string {
 
 /* ── shell: frame (theme-independent) ──────────────────────────────── */
 .mdblock {
-  box-sizing: border-box;
+${isolation}  box-sizing: border-box;
   max-width: var(--mdblock-width);
   margin: 0 auto;
   padding: var(--mdblock-padding);
@@ -99,7 +99,7 @@ export function renderCss(theme: Theme, options: Options): string {
 
 /* ── theme custom properties (scoped by data-theme) ────────────────── */
 .mdblock[data-theme="${theme.id}"] {
-${isolation}  /* face */
+  /* face */
   --mdblock-bg: ${bg};
   --mdblock-surface: ${colors.surface};
   --mdblock-text: ${colors.text};

@@ -378,18 +378,14 @@ describe("renderCss", () => {
     expect(overridden).toContain("--mdblock-bg: #123456;");
   });
 
-  test("adds all: revert first only when hardIsolation is true", () => {
-    const isolated = ruleBody(
-      renderCss(THEME_A, withOptions({ hardIsolation: true })),
-      THEME_A_SELECTOR,
-    );
-    expect(isolated.trimStart().startsWith("all: revert;")).toBe(true);
+  test("adds all: revert first on .mdblock only when hardIsolation is true", () => {
+    const isolatedCss = renderCss(THEME_A, withOptions({ hardIsolation: true }));
+    const frame = rootBody(isolatedCss);
+    expect(frame.trimStart().startsWith("all: revert;")).toBe(true);
+    expect(ruleBody(isolatedCss, THEME_A_SELECTOR)).not.toContain("all: revert");
 
-    const plain = ruleBody(
-      renderCss(THEME_A, withOptions({ hardIsolation: false })),
-      THEME_A_SELECTOR,
-    );
-    expect(plain).not.toContain("all: revert");
+    const plainCss = renderCss(THEME_A, withOptions({ hardIsolation: false }));
+    expect(plainCss).not.toContain("all: revert");
   });
 
   test("switching theme only changes colour literals", () => {
