@@ -129,11 +129,22 @@ const fragments = {
 };
 
 for (const [name, html] of Object.entries(fragments)) {
-  check(`N2-${name}`, `HTML 无字面色值（${name}）`, () => {
-    const hits = html.match(new RegExp(COLOR_LITERAL, "g"));
-    assert(hits === null, `出现字面色值：${(hits ?? []).slice(0, 5).join(", ")}`);
+  check(`N2-${name}`, `markup 无字面色值（${name}）`, () => {
+    // N2 判的是 markup：`--css inline` 的 `<style>` 块职责正是定义这些颜色，必须剥掉再扫。
+    const markup = html.replace(/<style>[\s\S]*?<\/style>/g, "");
+    const hits = markup.match(new RegExp(COLOR_LITERAL, "g"));
+    assert(hits === null, `markup 出现字面色值：${(hits ?? []).slice(0, 5).join(", ")}`);
   });
 }
+
+check("N2-0", "inline 样式表本身确实定义了颜色（上一条不是因为空文件而通过）", () => {
+  const styleBlocks = fragments.latte.match(/<style>[\s\S]*?<\/style>/g) ?? [];
+  assert(styleBlocks.length === 1, `inline 产物应有 1 个 <style>，实际 ${styleBlocks.length}`);
+  assert(
+    new RegExp(COLOR_LITERAL).test(styleBlocks[0] ?? ""),
+    "内联样式表里没有任何字面色值 —— 主题色没被写进去，说明契约变量是空的",
+  );
+});
 
 check("B-1", "根元素形如 <div class=\"mdblock\" data-theme=\"…\">", () => {
   assert(
@@ -293,6 +304,7 @@ const PROBE = `
       liListStyle: gli ? gli.listStyleType : null,
       wordSpacing: g.wordSpacing,
       boxSizing: g.boxSizing,
+      preFontSize: gpre ? gpre.fontSize : null,
       strongFontWeight: (function () {
         var s = root.querySelector("strong");
         return s ? getComputedStyle(s).fontWeight : null;
@@ -308,7 +320,7 @@ const PROBE = `
   };
   expect("L1-1", "根元素未继承宿主 letter-spacing", A.letterSpacing, "normal");
   expect("L1-2", "根元素未继承宿主 text-transform", A.textTransform, "none");
-  expect("L1-3", "根元素未继承宿主 word-spacing", A.wordSpacing, "normal");
+  expect("L1-3", "根元素未继承宿主 word-spacing", A.wordSpacing === "normal" || A.wordSpacing === "0px", true);
   expect("L1-4", "段落 margin 未被宿主 *{margin:0} 抹掉", A.pMarginTop !== "0px", true);
   expect("L1-5", "box-sizing 是我们的 border-box", A.boxSizing, "border-box");
   expect("L1-6", "th 边框是我们的 solid 而非宿主 dotted", A.thBorderStyle, "solid");
@@ -316,7 +328,14 @@ const PROBE = `
   expect("L1-8", "代码块字体不是宿主的 cursive", String(A.preFontFamily).indexOf("cursive") === -1, true);
   expect("L1-9", "列表符号没被宿主 list-style:none 抹掉", A.liListStyle !== "none", true);
   expect("L1-10", "strong 字重不是宿主的 400", A.strongFontWeight !== "400", true);
+  expect("L1-12", "代码块字号未被宿主 pre{font-size} 覆盖", parseFloat(A.preFontSize) > 12, true);
   expect("COEXIST-1", "同页两块主题不同（背景色不同）", A.background !== B.background, true);
+  var C = report.C || {};
+  expect("ISO-1", "hard-isolation 块的背景是主题色而非透明", C.background !== "rgba(0, 0, 0, 0)", true);
+  expect("ISO-2", "hard-isolation 块的文字色不是宿主色", C.color !== "rgb(187, 0, 0)", true);
+  expect("ISO-3", "hard-isolation 块未继承宿主字距", C.letterSpacing, "normal");
+  expect("ISO-4", "hard-isolation 块未继承宿主大写", C.textTransform, "none");
+  expect("ISO-5", "hard-isolation 块的字体不是宿主的花体", String(C.fontFamily).indexOf("cursive") === -1, true);
   var codeNodes = document.querySelectorAll('section[data-probe="A"] .mdblock pre code');
   var codeColors = Array.prototype.map.call(codeNodes, function (n) {
     return getComputedStyle(n).color;
