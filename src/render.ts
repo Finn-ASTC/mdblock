@@ -7,8 +7,9 @@
  * 真正定义这些变量的是 `css.ts`。
  *
  * 同步/异步矛盾：markdown-it 的 `highlight` / 渲染器规则是同步的，Shiki 是异步的。
- * 这里让围栏规则只产出一个占位符并把 `{lang, code}` 收进每次渲染独立的 `env`，等
- * `md.render()` 同步跑完后并发解析所有代码块，再整块字符串替换回占位符。
+ * 这里让两种代码块规则（围栏 `fence` 与缩进的 `code_block`）只产出一个占位符并把
+ * `{lang, code}` 收进每次渲染独立的 `env`，等 `md.render()` 同步跑完后并发解析所有
+ * 代码块，再整块字符串替换回占位符。
  * `renderMarkdown` 的签名因此保持不变。
  */
 
@@ -96,18 +97,32 @@ md.use(taskLists, { enabled: false });
 
 // CommonMark + GFM 表格/删除线由 markdown-it 默认 preset 提供，任务列表由插件提供，
 // 自动链接由 linkify: true 提供；原始 HTML 关闭（html: false），正文里的标签会被转义。
-md.renderer.rules.fence = (tokens, idx, _options, env) => {
-  const token = tokens[idx];
-  if (!token) return "";
+//
+// 两种代码块（围栏 `fence` 与 4 空格缩进的 `code_block`）共用同一条管线：都只登记代码块并
+// 返回占位符，结构、类名与转义全部由 `renderCodeBlock` 一处产出，不会各自漂移。
+// 缩进式代码块没有 info string，语言天然是 `undefined` → 按纯文本渲染，与未标语言的围栏块同形。
+
+/** 登记一个待渲染的代码块，返回它在正文里的占位符。 */
+function collectCodeBlock(env: unknown, lang: string | undefined, code: string): string {
   const { codeBlocks } = env as unknown as RenderEnv;
   const index = codeBlocks.length;
-  codeBlocks.push({ lang: readLang(token.info), code: token.content });
+  codeBlocks.push({ lang, code });
   return codeMarker(index);
+}
+
+md.renderer.rules.fence = (tokens, idx, _options, env) => {
+  const token = tokens[idx];
+  return token ? collectCodeBlock(env, readLang(token.info), token.content) : "";
 };
 
-/** 渲染单个围栏代码块；语言不可用或渲染失败时降级为纯文本，不抛错。 */
+md.renderer.rules.code_block = (tokens, idx, _options, env) => {
+  const token = tokens[idx];
+  return token ? collectCodeBlock(env, undefined, token.content) : "";
+};
+
+/** 渲染单个代码块；语言不可用或渲染失败时降级为纯文本，不抛错。 */
 async function renderCodeBlock(block: PendingCodeBlock): Promise<string> {
-  // 围栏内容总是以一个换行结尾，去掉它，免得 `<pre>` 里多出一整行空白。
+  // 围栏与缩进代码块的内容总是以一个换行结尾，去掉它，免得 `<pre>` 里多出一整行空白。
   const source = block.code.replace(/\n$/, "");
   const { lang } = block;
   if (lang && (await loadLanguage(lang))) {
