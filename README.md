@@ -10,6 +10,8 @@
 - **高亮与主题解耦** —— 代码高亮只产出 `var(--shiki-*)` 引用，不写死任何色值。
   **换主题不需要重新高亮**，一份 HTML 可以配任意主题的样式表。
 
+![mdblock 渲染效果](docs/screenshot.png)
+
 ## 快速开始
 
 ```bash
@@ -155,4 +157,9 @@ bun run accept      # 端到端验收：真实 CLI 产出 + 契约不变量 + �
 里面并排放着三个不同主题的文章块，并在页面上自报 18 条 computed-style 判据。
 直接用浏览器打开它就能肉眼确认隔离效果。
 
-架构与设计决策见 `docs/superpowers/specs/`；模块接口契约见 `docs/orch/CONTRACT.md`。
+架构与设计决策见 `docs/design/`；模块接口契约见 `docs/orch/CONTRACT.md`；
+文档导航见 `docs/README.md`。
+
+## 许可
+
+[MIT](LICENSE)

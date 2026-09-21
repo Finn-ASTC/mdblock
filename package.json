@@ -1,10 +1,42 @@
 {
   "name": "mdblock",
   "version": "0.1.0",
-  "private": true,
+  "description": "把 Markdown 构建成可嵌入任意网页的「文章块」——零运行时 JS、样式不泄漏、主题配色由配置文件驱动",
   "type": "module",
+  "license": "MIT",
+  "author": "Finn-ASTC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Finn-ASTC/mdblock.git"
+  },
+  "homepage": "https://github.com/Finn-ASTC/mdblock#readme",
+  "bugs": {
+    "url": "https://github.com/Finn-ASTC/mdblock/issues"
+  },
+  "keywords": [
+    "markdown",
+    "css",
+    "theme",
+    "syntax-highlighting",
+    "shiki",
+    "markdown-it",
+    "nord",
+    "catppuccin",
+    "gruvbox",
+    "embed",
+    "static-site"
+  ],
   "bin": {
     "mdblock": "./src/cli.ts"
+  },
+  "files": [
+    "src",
+    "themes",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "bun": ">=1.1"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
