@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: 安装依赖
+        run: bun install --frozen-lockfile
+
+      - name: 类型检查
+        run: bun run typecheck
+
+      - name: 单元测试
+        run: bun test
+
+      - name: 端到端验收
+        run: bun run accept
+
+      - name: 产物不变量抽查（无 <script>、markup 无字面色值）
+        run: |
+          bun src/cli.ts examples/post.md --theme catppuccin-mocha --css inline -o /tmp/ci-block.html
+          python3 - <<'PY'
+          import re, sys, pathlib
+          html = pathlib.Path('/tmp/ci-block.html').read_text()
+          errors = []
+          if '<script' in html:
+              errors.append('产物里出现了 <script> —— 违反「零运行时 JS」')
+          markup = re.sub(r'<style>.*?</style>', '', html, flags=re.S)
+          hits = re.findall(r'#[0-9a-fA-F]{6}\b|\brgba?\(|\bhsla?\(', markup)
+          if hits:
+              errors.append(f'markup 出现字面色值：{hits[:5]}')
+          pre = len(re.findall(r'<pre\b', markup)); tagged = len(re.findall(r'<pre class="mdblock-code">', markup))
+          if pre != tagged:
+              errors.append(f'{pre} 个 <pre>，只有 {tagged} 个带 mdblock-code')
+          if errors:
+              print('\n'.join(errors)); sys.exit(1)
+          print('产物不变量通过')
+          PY
