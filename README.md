@@ -1,6 +1,5 @@
 # mdblock
 
-[![CI](https://github.com/Finn-ASTC/mdblock/actions/workflows/ci.yml/badge.svg)](https://github.com/Finn-ASTC/mdblock/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 把 Markdown 文件构建成一个**可以嵌进任意网页的文章块**：一段自包含的 HTML 片段加一份样式表。
